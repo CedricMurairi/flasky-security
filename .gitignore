@@ -1,0 +1,6 @@
+node_modules/
+.swifteven/
+package-lock.json
+.env
+instance/
+__pycache__/
