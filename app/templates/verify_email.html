@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Verify Your Email</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <h4>Verify Your Email</h4>
+    <p>Thank you for registering with us. Please click on the link below to verify your email.</p>
+    {% if token %}
+      <a href="{{ url_for('auth.confirm_email', _external = True, token = token) }}">Verify Email</a>
+    {% endif %}
+    <p>Ignore this email if you have already verified your email.</p>
+    <h4>Your credentials are:</h4>
+    <ul>
+      <li>Email: {{ user.email }}</li>
+      <li>Password: {{ password }}</li>
+    </ul>
+  </body>
+</html>

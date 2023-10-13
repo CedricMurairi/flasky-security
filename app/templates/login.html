@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, action_button, password_requirements %}
+{% block title %}
+  Login
+{% endblock %}
+{% block content %}
+  <h1 class="mb-6 text-2xl font-semibold">Login</h1>
+  <form method="POST" action="{{ url_for('auth.login') }}">{{ input_field('email', 'Email', 'email') }}
+    {{ input_field('password', 'Password', 'password') }}
+    {{ action_button('Submit') }}</form>
+  {{ password_requirements() }}
+{% endblock %}

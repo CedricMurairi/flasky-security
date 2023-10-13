@@ -1,0 +1,55 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import password_requirements, input_field, radio_button %}
+{% block title %}
+  Admin Dashboard
+{% endblock %}
+{% block content %}
+  <h1 class="mb-6 text-2xl font-semibold">Add a User</h1>
+  <form method="POST" action="{{ url_for('admin.add_user') }}">
+    {{ input_field('name', 'Name', 'name') }}
+    {{ input_field('email', 'Email', 'email') }}
+    {{ input_field('password', 'Password', 'password') }}
+    <div class="flex justify-between my-5">{{ radio_button('student', 'is_student') }}
+      {{ radio_button('faculty', 'is_faculty') }}
+      {{ radio_button('admin', 'is_admin') }}</div>
+    <button class="my3 py-2 px-5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300" type="submit">Submit</button>
+  </form>
+  {{ password_requirements() }}
+  <table class="mt-6">
+    <thead>
+      <tr>
+        <th class="border-2 border-black font-bold">Name</th>
+        <th class="border-2 border-black font-bold">Email</th>
+        <th class="border-2 border-black font-bold">Verified</th>
+        <th class="border-2 border-black font-bold">Role</th>
+        <th class="border-2 border-black font-bold">Action</th>
+      </tr>
+    </thead>
+
+    <tbody class="bg-white divide-y divide-gray-200">
+      {% for user in users %}
+        <tr>
+          <td class="py-2 px-5 rounded-md bg-gray-100 border border-gray-500">{{ user.name }}</td>
+          <td class="py-2 px-5 rounded-md bg-gray-100 border border-gray-500">{{ user.email }}</td>
+          <td class="py-2 px-5 rounded-md bg-gray-100 border border-gray-500">{{ user.is_verified }}</td>
+          <td class="py-2 px-5 rounded-md bg-gray-100 border border-gray-500">
+            {% if user.is_admin %}
+              Admin
+            {% elif user.is_faculty %}
+              Faculty
+            {% else %}
+              Student
+            {% endif %}
+          </td>
+          {% if current_user.id != user.id %}
+            <td class="py-2 px-5 rounded-md bg-gray-100 border-2 border-gray-500">
+              <a href="{{ url_for('admin.delete_user', id = user.id) }}" class="text-red-500 hover:text-red-700 transition duration-300 underline">Delete</a>
+            </td>
+          {% else %}
+            <td class="py-2 px-5 rounded-md bg-orange-400 border border-gray-500"></td>
+          {% endif %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

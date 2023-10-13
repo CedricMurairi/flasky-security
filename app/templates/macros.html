@@ -1,0 +1,110 @@
+{# macros.html #}
+
+{% macro input_field(name, placeholder, input_type) -%}
+  <p class="my-2">
+    <input type="{{ input_type }}" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" class="py-2 px-5 w-full border rounded-md" required />
+  </p>
+{%- endmacro %}
+
+{% macro action_button(description) -%}
+  <button class="my-3 py-2 px-5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300" type="submit">{{ description }}</button>
+{%- endmacro %}
+
+{% macro select_field(default, name) %}
+  <p class="my-2">
+    <select required class="py-3 px-5 border border-gray-300 rounded-md w-full" name="{{ name }}" id="{{ name }}">
+      <option value="">Select Faculty</option>
+      {{ caller() }}
+    </select>
+  </p>
+{% endmacro %}
+
+{% macro text_area(name, placeholder) %}
+  <p>
+    <textarea required class="border border-gray-300 rounded-lg mt-3 px-5 py-3" placeholder="{{ placeholder }}" name="{{ name }}" rows="8" cols="80"></textarea>
+  </p>
+{% endmacro %}
+
+{% macro render_id_chip(current_user) %}
+  {% if current_user.is_admin %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-orange-300 text-xs">Admin</span>
+  {% elif current_user.is_faculty %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-green-300 text-xs">Faculty</span>
+  {% else %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-red-300 text-xs">Student</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro render_comment_chip(comment) %}
+  {% if comment.user.is_admin %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-orange-300 text-xs">Admin</span>
+  {% elif comment.user.is_faculty %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-green-300 text-xs">Faculty</span>
+  {% else %}
+    <span class="border rounded-full font-normal px-3 py-[2px] bg-red-300 text-xs">Student</span>
+  {% endif %}
+{% endmacro %}
+
+{% macro button_link(text, url) %}
+  <li class="underline mr-3">
+    <a href="{{ url_for(url) }}">{{ text }}</a>
+  </li>
+{% endmacro %}
+
+{% macro radio_button(id, value) %}
+  <div>
+    <input type="radio" id="{{ id }}" name="role" value="{{ value }}" />
+    <label for="{{ id }}">Student</label>
+  </div>
+{% endmacro %}
+
+{% macro render_comments(comments, current_user, url) %}
+  <div>
+    {% for comment in comments %}
+      <div class="text-left comment border border-gray-300 rounded-lg p-3 my-3">
+        <h3 class="relative text-base font-bold pr-[10rem]">
+          {{ comment.title }}
+          <span class="text-sm text-gray-500">Posted by: {{ comment.user.name }}</span>
+          {{ render_comment_chip(comment) }}
+          <span>|</span>
+          <span class="text-sm text-gray-500">To: {{ comment.faculty.name }}</span>
+          {% if (current_user.is_authenticated and current_user.id == comment.user.id) or current_user.is_admin %}
+            <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_comment', id = comment.id) }}">Delete</a>
+          {% endif %}
+          <button class="underline text-gray-500 font-normal ml-3 text-sm" onclick="toggleReplyForm({{ comment.id }})">Reply</button>
+          <button class="underline text-gray-500 font-normal ml-3 text-sm" onclick="toggleRepliesBlock({{ comment.id }})">View replies</button>
+        </h3>
+        <p class="text-sm text-gray-500">{{ comment.comment }}</p>
+      </div>
+      <form class="hidden" id="comment-form-{{ comment.id }}" action="{{ url_for(url) }}" method="POST">
+        <input type="hidden" name="comment_id" value="{{ comment.id }}" />
+        <textarea class="py-3 px-5 border border-gray-300 rounded-md w-full" name="reply" id="reply" rows="1" placeholder="Reply to this comment"></textarea>
+        <button class="py-2 px-5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition duration-300 w-full" type="submit">Reply</button>
+      </form>
+      <div class="hidden" id="replies-block-{{ comment.id }}">
+        {% for reply in comment.replies %}
+          <div class="text-left comment border border-gray-300 rounded-lg p-3 my-3 ml-5">
+            <h3 class="relative text-base font-bold pr-[10rem]">
+              <span class="text-sm text-gray-500">Posted by: {{ reply.user.name }}</span>
+              |{{ render_comment_chip(reply) }}
+              {% if (current_user.is_authenticated and current_user.id == reply.user.id) or current_user.is_admin %}
+                <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_reply', id = reply.id) }}">Delete</a>
+              {% endif %}
+            </h3>
+            <p class="text-sm text-gray-500">{{ reply.reply }}</p>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
+{% macro password_requirements() -%}
+  <ul class="mt-6 text-gray-400 text-center font-bold text-sm">
+    <li class="password-requirement">Has a minimum of 8 characters in length</li>
+    <li class="password-requirement">Contains at least one uppercase English letter</li>
+    <li class="password-requirement">Contains at least one lowercase English letter</li>
+    <li class="password-requirement">Contains at least one digit</li>
+    <li class="password-requirement">Contains at least one special character</li>
+  </ul>
+{%- endmacro %}
