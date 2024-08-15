@@ -1,8 +1,6 @@
-{# macros.html #}
-
 {% macro input_field(name, placeholder, input_type) -%}
   <p class="my-2">
-    <input type="{{ input_type }}" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" class="py-2 px-5 w-full border rounded-md" required />
+    <input type="{{ input_type }}" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" class="block max-sm:px-3 px-5 py-2 my-2 border rounded-md border-gray-400 focus:outline-none" required />
   </p>
 {%- endmacro %}
 
@@ -21,7 +19,7 @@
 
 {% macro text_area(name, placeholder) %}
   <p>
-    <textarea required class="border border-gray-300 rounded-lg mt-3 px-5 py-3" placeholder="{{ placeholder }}" name="{{ name }}" rows="8" cols="80"></textarea>
+    <textarea required class="border border-gray-300 rounded-lg px-5 py-3" placeholder="{{ placeholder }}" name="{{ name }}" rows="5" cols="20"></textarea>
   </p>
 {% endmacro %}
 
@@ -46,7 +44,7 @@
 {% endmacro %}
 
 {% macro button_link(text, url) %}
-  <li class="underline mr-3">
+  <li class="border border-gray-500 rounded-md mt-3 py-3 px-5 cursor-pointer hover:bg-gray-700 hover:text-white">
     <a href="{{ url_for(url) }}">{{ text }}</a>
   </li>
 {% endmacro %}
@@ -68,8 +66,8 @@
           {{ render_comment_chip(comment) }}
           <span>|</span>
           <span class="text-sm text-gray-500">To: {{ comment.faculty.name }}</span>
-          {% if (current_user.is_authenticated and current_user.id == comment.user.id) or current_user.is_admin %}
-            <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_comment', id = comment.id) }}">Delete</a>
+          {% if current_user.is_authenticated and current_user.id == comment.user.id or current_user.is_admin %}
+            <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_comment', id=comment.id) }}">Delete</a>
           {% endif %}
           <button class="underline text-gray-500 font-normal ml-3 text-sm" onclick="toggleReplyForm({{ comment.id }})">Reply</button>
           <button class="underline text-gray-500 font-normal ml-3 text-sm" onclick="toggleRepliesBlock({{ comment.id }})">View replies</button>
@@ -87,8 +85,8 @@
             <h3 class="relative text-base font-bold pr-[10rem]">
               <span class="text-sm text-gray-500">Posted by: {{ reply.user.name }}</span>
               |{{ render_comment_chip(reply) }}
-              {% if (current_user.is_authenticated and current_user.id == reply.user.id) or current_user.is_admin %}
-                <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_reply', id = reply.id) }}">Delete</a>
+              {% if current_user.is_authenticated and current_user.id == reply.user.id or current_user.is_admin %}
+                <a class="absolute right-10 text-sm text-red-400" href="{{ url_for('admin.delete_reply', id=reply.id) }}">Delete</a>
               {% endif %}
             </h3>
             <p class="text-sm text-gray-500">{{ reply.reply }}</p>
@@ -98,13 +96,3 @@
     {% endfor %}
   </div>
 {% endmacro %}
-
-{% macro password_requirements() -%}
-  <ul class="mt-6 text-gray-400 text-center font-bold text-sm">
-    <li class="password-requirement">Has a minimum of 8 characters in length</li>
-    <li class="password-requirement">Contains at least one uppercase English letter</li>
-    <li class="password-requirement">Contains at least one lowercase English letter</li>
-    <li class="password-requirement">Contains at least one digit</li>
-    <li class="password-requirement">Contains at least one special character</li>
-  </ul>
-{%- endmacro %}

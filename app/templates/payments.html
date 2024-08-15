@@ -1,0 +1,32 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Payements
+{% endblock %}
+{% block content %}
+  <div>
+    <p class="font-bold my-5">Paiements</p>
+    <div>
+      <table class="table-auto w-full text-left bg-gray-900 text-gray-300 rounded-lg overflow-hidden">
+        <thead class="bg-gray-800 text-gray-400">
+          <tr>
+            <th class="px-4 py-2">Itème</th>
+            <th class="px-4 py-2">Montant</th>
+            <th class="px-4 py-2">Date de paiement</th>
+            <th class="px-4 py-2">Débiteur</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for payment in payments %}
+            <tr>
+              <td class="px-4 py-2">{{ payment.order.item.name }}</td>
+              <td class="px-4 py-2">{{ payment.amount }} USD</td>
+              <td class="px-4 py-2">{{ payment.payment_date }}</td>
+              <td class="px-4 py-2">{{ payment.debitor.name }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}

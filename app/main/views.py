@@ -1,70 +1,149 @@
 from . import main
 from flask import render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from app.models import User, Comment, Reply
+from app.models import User, Inventory, Item, Order, Payment
 from app import db
+from app.email import send_email
+from datetime import datetime as Datetime
 
 
 @main.route('/', methods=['GET'])
 @login_required
 def index():
-    faculties = User.query.filter_by(is_faculty=True).all()
-    return render_template('index.html', faculties=faculties)
+    return render_template('index.html')
 
 
-@main.route('/comments', methods=['GET'])
+@main.route('/orders', methods=['GET', 'POST'])
 @login_required
-def comments():
-    comments = Comment.query.filter_by(user_id=current_user.id).all()
-    if current_user.is_faculty:
-        fac_comments = Comment.query.filter_by(
-            faculty_id=current_user.id).all()
-    return render_template('comments.html', comments=comments, fac_comments=fac_comments if current_user.is_faculty else None)
+def orders():
+    if request.method == "POST":
+        item_id = request.form.get('item_type')
+        quantity = request.form.get('quantity')
+        owner_id = current_user.id
+        supplier_id = request.form.get('supplier_id')
+        unit_price = request.form.get('unit_price')
+        total_price = int(quantity) * int(unit_price)
+
+        order = Order(item_id=item_id, quantity=quantity, unit_price=unit_price,
+                      total_price=total_price, supplier_id=supplier_id, owner_id=owner_id)
+        db.session.add(order)
+        db.session.commit()
+        flash('Order has been placed successfully')
+
+        return redirect(url_for('main.orders'))
+
+    orders = []
+    if current_user.is_supplier:
+        orders = Order.query.filter_by(supplier_id=current_user.id).all()
+    elif current_user.is_manager or current_user.is_admin:
+        orders = Order.query.filter_by(owner_id=current_user.id).all()
+    items = Item.query.all()
+    suppliers = User.query.filter_by(is_supplier=True).all()
+    return render_template('orders.html', orders=orders, items=items, suppliers=suppliers)
 
 
-@main.route('/comment', methods=['POST'])
+@main.route('/order/<int:id>/pay', methods=["GET"])
 @login_required
-def comment():
-    title = request.form.get("title")
-    comment = request.form.get("comment")
-    faculty_id = int(request.form.get("faculty"))
+def pay_order(id):
+    order = Order.query.get(id)
+    order.paid = True
+    db.session.add(order)
 
-    comment = Comment(title=title, comment=comment,
-                      faculty_id=faculty_id, user_id=current_user.id)
-    db.session.add(comment)
+    method = "Bank Transfer"
+
+    payment = Payment(order_id=order.id, amount=order.total_price,
+                      debitor_id=order.owner_id, receiver_id=order.supplier_id, method=method, payment_date=Datetime.now())
+    db.session.add(payment)
+
     db.session.commit()
-    flash('Comment added successfully')
-    return redirect(url_for('main.index'))
+
+    send_email(order.supplier.email, 'Payment received',
+               'order/payment_received', order=order, payment_date=payment.payment_date)
+
+    flash("Order has been paid")
+
+    return redirect(url_for('main.orders'))
 
 
-@main.route('/reply', methods=['POST'])
+@main.route('/order/<int:id>/supply', methods=["GET"])
 @login_required
-def reply():
-    comment_id = int(request.form.get("comment_id"))
-    reply = request.form.get("reply")
+def supply_order(id):
+    order = Order.query.get(id)
+    owner_id = order.owner_id
+    supplier_id = order.supplier_id
 
-    reply = Reply(comment_id=comment_id, reply=reply, user_id=current_user.id)
-    db.session.add(reply)
+    owner_inventory = Inventory.query.filter_by(
+        owner_id=owner_id, item_id=order.item_id).first()
+    supplier_inventory = Inventory.query.filter_by(
+        owner_id=supplier_id, item_id=order.item.id).first()
+
+    if supplier_inventory.quantity < order.quantity:
+        flash("Supplier does not have enough items to supply this order")
+        return redirect(url_for('main.orders'))
+
+    owner_inventory.quantity += order.quantity
+    supplier_inventory.quantity -= order.quantity
+    order.delivered = True
+    order.delivery_date = Datetime.now()
+
+    db.session.add(owner_inventory)
+    db.session.add(supplier_inventory)
+    db.session.add(order)
     db.session.commit()
-    flash('Reply added successfully')
-    return redirect(url_for('main.comments'))
+
+    send_email(order.owner.email, 'Your order has been supplied',
+               'order/order_supplied', order=order)
+
+    flash("Order has been supplied")
+
+    return redirect(url_for('main.orders'))
 
 
-@main.route('/comment/<int:id>', methods=['GET'])
+@main.route('/order/<int:id>/delete', methods=['GET'])
 @login_required
-def delete_comment(id):
-    comment = Comment.query.filter_by(id=id).first()
-    db.session.delete(comment)
+def delete_order(order_id):
+    order = Order.query.get(order_id)
+    db.session.delete(order)
     db.session.commit()
-    flash('Comment deleted successfully')
-    return redirect(url_for('main.comments'))
+    flash('Order has been deleted successfully')
+
+    return redirect(url_for('main.orders'))
 
 
-@main.route('/reply/<int:id>', methods=['GET'])
+@main.route('/payments', methods=['GET'])
 @login_required
-def delete_reply(id):
-    reply = Reply.query.filter_by(id=id).first()
-    db.session.delete(reply)
-    db.session.commit()
-    flash('Reply deleted successfully')
-    return redirect(url_for('main.comments'))
+def payments():
+    payments = Payment.query.filter_by(receiver_id=current_user.id).all()
+    return render_template('payments.html', payments=payments)
+
+
+@main.route('/inventory', methods=['GET', 'POST'])
+@login_required
+def inventory():
+    if request.method == "POST":
+        item_id = request.form.get('item_type')
+        quantity = request.form.get('quantity')
+        unit_price = request.form.get('unit_price')
+        owner_id = current_user.id
+
+        item = Inventory.query.filter_by(
+            item_id=item_id, owner_id=owner_id).first()
+        if item:
+            item.quantity += int(quantity)
+            db.session.add(item)
+            db.session.commit()
+            flash('Item has been updated')
+
+            return redirect(url_for('main.inventory'))
+
+        inventory = Inventory(item_id=item_id, quantity=quantity,
+                              unit_price=unit_price, owner_id=owner_id)
+        db.session.add(inventory)
+        db.session.commit()
+        flash('Inventory added successfully')
+
+        return redirect(url_for('main.inventory'))
+
+    inventories = Inventory.query.filter_by(owner_id=current_user.id).all()
+    items = Item.query.all()
+    return render_template('inventory.html', inventories=inventories, items=items)

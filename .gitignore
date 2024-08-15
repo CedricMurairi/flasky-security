@@ -2,5 +2,7 @@ node_modules/
 .swifteven/
 package-lock.json
 .env
+sys-env/
 instance/
+migrations/
 __pycache__/

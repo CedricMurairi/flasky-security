@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Reset Your Password</title>
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <h4>Reset Your Password</h4>
+    <p>Someone has requested a password reset on your account. If this is not you, please ignore this email.</p>
+    <div></div>
+    {% if token %}
+      <a href="{{ url_for('auth.confirm_email', _external=True, token=token) }}">Reset your password</a>
+    {% endif %}
+    <p>Thanks, The Team</p>
+  </body>
+</html>

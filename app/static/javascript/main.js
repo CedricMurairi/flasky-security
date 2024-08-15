@@ -57,3 +57,15 @@ function toggleRepliesBlock(commentID) {
     }
     replyForm.style.display = 'block';
 }
+
+function togglePasswordVisibility() {
+    var x = document.getElementById("password");
+    var y = document.getElementById("pass_toggle_label");
+    if (x.type === "password") {
+        x.type = "text";
+        y.innerHTML = "Hide password";
+    } else {
+        x.type = "password";
+        y.innerHTML = "Show password";
+    }
+} 

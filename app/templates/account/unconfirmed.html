@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Unconfirmed
+{% endblock %}
+{% block content %}
+  <div>
+    <h1 class="font-bold text-2xl">Hello {{ current_user.name }}</h1>
+    <p class="my-3">You have not confirmed your email.</p>
+    <p>Check your inbox for a link and confirm the email before you can access the platform.</p>
+    <p class="my-3">
+      Didn't receive a link? <a class="text-slate-500 underline" href="{{ url_for('auth.resend_confirmation', id=current_user.id) }}">Resend</a>
+    </p>
+  </div>
+{% endblock %}

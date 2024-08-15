@@ -4,7 +4,8 @@
 <html lang="en">
   <head>
     {% block head %}
-      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename = 'css/output.css') }}" />
+      <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/output.css') }}" />
+      <meta name="viewport" />
       <title>
         {% block title %}
 
@@ -12,39 +13,57 @@
       </title>
     {% endblock %}
   </head>
-  <body class="text-center flex flex-col justify-between h-screen w-[80%] m-auto">
+
+  <body class="relative text-center flex flex-col justify-between h-screen w-[80%] m-auto bg-slate-50" style="background-image: url('{{ url_for('static', filename='images/mg-bg-1.jpg') }}');">
     <div id="header" class="mt-6">
-      {% block header %}
-        {% if current_user.is_authenticated %}
-          <h1 class="text-xl my-5 flex justify-center items-center">
-            {{ current_user.name }}
-            {{ render_id_chip(current_user) }}
-          </h1>
-          <nav class="flex justify-center items-center">
-            <a href="{{ url_for('auth.logout') }}" class="px-5 py-2 border rounded-md w-fit my-1">Logout</a>
-          </nav>
-        {% endif %}
-      {% endblock %}
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-          <ul class="grid place-items-center">
-            {% for message in messages %}
-              <li class="px-5 py-2 border rounded-md w-fit my-1">{{ message }}</li>
-            {% endfor %}
-          </ul>
-        {% endif %}
-      {% endwith %}
+      <div class="flex flex-row justify-between items-center pb-5">
+        <h1 class="font-semibold text-2xl"><a href="{{ url_for('index') }}">Supplier Management</a></h1>
+        <div class="flex">
+          {% with messages=get_flashed_messages() %}
+            {% if messages %}
+              <ul class="flex mr-5">
+                {% for message in messages %}
+                  <li class="px-5 py-2 ml-2 border rounded-md w-fit my-1">{{ message }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          {% endwith %}
+          {% block header %}
+            {% if current_user.is_authenticated %}
+              <nav class="flex items-center">
+                <div class="text-left">
+                  <h1 class="text-2xl font-bold flex justify-center items-center">{{ current_user.name }}</h1>
+                  <p class="font-light text-sm text-gray-600">
+                    {% if current_user.is_admin %}
+                      Administrateur
+                    {% elif current_user.is_manager %}
+                      Manager
+                    {% elif current_user.is_supplier %}
+                      Fournisseur
+                    {% endif %}
+                  </p>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="px-5 py-2 ml-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg w-fit my-1 font-bold">Logout</a>
+              </nav>
+            {% endif %}
+          {% endblock %}
+        </div>
+      </div>
+      <hr />
     </div>
+
     <div class="flex flex-col justify-center items-center" id="content">
       {% block content %}
 
       {% endblock %}
     </div>
+
     <div id="footer">
       {% block footer %}
-        <p class="my-3">&copy; Swift 2023</p>
+        <p class="my-3 text-xs text-slate-600">&copy; MG 2024 . Supplier Management System</p>
       {% endblock %}
     </div>
-    <script src="{{ url_for('static', filename = 'javascript/main.js') }}"></script>
+
+    <script src="{{ url_for('static', filename='javascript/main.js') }}"></script>
   </body>
 </html>

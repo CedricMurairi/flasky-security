@@ -5,26 +5,18 @@
 {% endblock %}
 {% block content %}
   {% if current_user.is_authenticated and current_user.is_admin %}
-    <h1 class="mb-6 text-2xl font-semibold">Admin</h1>
-    <ul class="flex justify-between my-2 text-lg">{{ button_link('Manage Users', 'admin.users') }}
-      {{ button_link('View Comments', 'admin.comments') }}</ul>
-  {% endif %}
-  {% if current_user.is_authenticated and current_user.is_faculty %}
-    <h1 class="mb-6 text-2xl font-semibold">Faculty</h1>
-    <ul class="flex justify-between my-2 text-lg">{{ button_link('View Comments and Replies', 'main.comments') }}</ul>
-  {% endif %}
-  {% if current_user.is_authenticated and not current_user.is_admin and not current_user.is_faculty %}
-    <h1 class="mb-6 text-2xl font-semibold">Student</h1>
-    <ul class="flex justify-between my-2 text-lg">{{ button_link('View Comments and Replies', 'main.comments') }}</ul>
-    <form class="" method="POST" action="{{ url_for('main.comment') }}">
-      {{ input_field('title', 'Title', 'text') }}
-      {% call select_field('Select Faculty', 'faculty') %}
-      {% for faculty in faculties %}
-        <option value="{{ faculty.id }}">{{ faculty.name }}</option>
-      {% endfor %}
-      {% endcall %}
-      {{ text_area('comment', 'Type something') }}
-      {{ action_button('Submit') }}
-    </form>
+    <ul class="grid grid-cols-2 grid-rows-2 gap-x-2 gap-y-0 text-lg">{{ button_link('Gestion Commanades', 'main.orders') }}
+      {{ button_link('Gestion Inventaire', 'main.inventory') }}
+      {{ button_link('Gestion Payements', 'main.payments') }}
+      {{ button_link("Gestion D'utilisateurs", 'admin.users') }}</ul>
+  {% elif current_user.is_authenticated and current_user.is_manager %}
+    <ul class="grid grid-cols-2 grid-rows-2 gap-x-2 gap-y-0 text-lg">{{ button_link('Gestion Commanades', 'main.orders') }}
+      {{ button_link('Gestion Inventaire', 'main.inventory') }}
+      {{ button_link('Gestion Fournisseurs', 'admin.users') }}
+      {{ button_link('Gestion Payements', 'main.payments') }}</ul>
+  {% else %}
+    <ul class="grid grid-cols-2 grid-rows-2 gap-x-2 gap-y-0 text-lg">{{ button_link('Gestion Commanades', 'main.orders') }}
+      {{ button_link('Gestion Inventaire', 'main.inventory') }}
+      {{ button_link('Gestion Payements', 'main.payments') }}</ul>
   {% endif %}
 {% endblock %}

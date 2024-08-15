@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Utilisateurs
+{% endblock %}
+{% block content %}
+  <div>
+    <p class="font-bold mt-5">Définir les itèmes</p>
+    <form method="post" action="{{ url_for('admin.add_item') }}">
+      <div class="mb-5">{{ input_field('name', 'Item name', 'text') }}
+        {{ text_area('description', "Description de l'item") }}</div>
+      {{ action_button('Ajouter') }}
+    </form>
+  </div>
+  <div class="my-5">
+    <p class="font-bold mb-5">Itèmes définis</p>
+    <table class="table-auto w-full text-left bg-gray-900 text-gray-300 rounded-lg overflow-hidden">
+      <thead class="bg-gray-800 text-gray-400">
+        <tr>
+          <th class="px-4 py-2">ID</th>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in items %}
+          <tr class="border-t border-gray-700">
+            <td class="px-4 py-2">{{ item.id }}</td>
+            <td class="px-4 py-2">{{ item.name }}</td>
+            <td class="px-4 py-2">{{ item.description }}</td>
+            {% if current_user.is_admin %}
+              <td class="px-4 py-2">
+                <a href="{{ url_for('admin.delete_item', id=item.id) }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded">Remove</a>
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

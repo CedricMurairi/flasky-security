@@ -1,0 +1,13 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Fournisseurs
+{% endblock %}
+{% block content %}
+  <div>
+    <p class="font-bold">Fournisseurs</p>
+    {% for order in orders %}
+      <h2>{{ order.name }}</h2>
+    {% endfor %}
+  </div>
+{% endblock %}

@@ -3,8 +3,7 @@
   Login
 {% endblock %}
 {% block content %}
-  <h1 class="text-5xl">Access Denied</h1>
-  <p class="my-5">
-    <a class="underline" href="{{ url_for('index') }}">Back to home</a>
-  </p>
+  <h1 class="text-2xl font-bold">Access Denied</h1>
+  <p class="my-3">You do not have the right priviledge to access this resource</p>
+  <a class="underline font-thin" href="{{ url_for('index') }}">Back to home</a>
 {% endblock %}

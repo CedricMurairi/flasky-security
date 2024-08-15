@@ -3,8 +3,10 @@ from flask_login import LoginManager
 from config import config
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy import MetaData
 from flask_mail import Mail
 from flask_migrate import Migrate
+import os
 
 login_manager = LoginManager()
 login_manager.session_protection = 'strong'
@@ -15,12 +17,24 @@ class Base(DeclarativeBase):
     pass
 
 
-db = SQLAlchemy(model_class=Base)
+metadata = MetaData(
+    naming_convention={
+        "ix": "ix_%(column_0_label)s",
+        "uq": "uq_%(table_name)s_%(column_0_name)s",
+        "ck": "ck_%(table_name)s_%(column_0_name)s",
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+        "pk": "pk_%(table_name)s"
+    }
+)
+
+db = SQLAlchemy(model_class=Base, metadata=metadata)
 mail = Mail()
 migrate = Migrate()
 
 
-def create_app(config_name):
+def create_app():
+    config_name = os.getenv('FLASK_ENV') or 'default'
+
     app = Flask(__name__, static_folder="static")
     app.config.from_object(config[config_name])
 
@@ -29,7 +43,7 @@ def create_app(config_name):
     login_manager.init_app(app)
     db.init_app(app)
     mail.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db, render_as_batch=True)
 
     from .auth import auth as auth_blueprint
     from .main import main as main_blueprint

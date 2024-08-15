@@ -1,0 +1,121 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Commandes
+{% endblock %}
+{% block content %}
+  {% if current_user.is_admin or current_user.is_manager %}
+    <div>
+      <p class="font-bold mt-5">Initier une commande</p>
+      <form class="my-5" method="post" action="{{ url_for('main.orders') }}">
+        <div class="flex">
+          <div class="flex flex-col mr-5">
+            <label class="text-left font-semibold my-1" for="item_type">Itème</label>
+            <select name="item_type" id="item_type" class="px-5 py-2 mb-7-5 border rounded-md border-gray-400">
+              {% for item in items %}
+                <option value="{{ item.id }}">{{ item.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="flex flex-col">
+            <label class="text-left font-semibold my-1" for="supplier_id">Fournisseur</label>
+            <select name="supplier_id" id="supplier_id" class="px-5 py-2 mb-5 border rounded-md border-gray-400">
+              {% for supplier in suppliers %}
+                <option value="{{ supplier.id }}">{{ supplier.name }} | {{ supplier.email }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        {{ input_field('quantity', 'Quantité', 'number') }}
+        {{ input_field('unit_price', 'Prix', 'number') }}
+        {{ action_button('Commander') }}
+      </form>
+    </div>
+  {% endif %}
+  <div class="my-5">
+    <p class="font-bold mb-5">En cours</p>
+    <table class="table-auto w-full text-left bg-gray-900 text-gray-300 rounded-lg overflow-hidden">
+      <thead class="bg-gray-800 text-gray-400">
+        <tr>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Qté</th>
+          <th class="px-4 py-2">PU</th>
+          <th class="px-4 py-2">PT</th>
+          <th class="px-4 py-2">Payée</th>
+          {% if current_user.is_supplier %}
+            <th class="px-4 py-2">Acheteur</th>
+          {% else %}
+            <th class="px-4 py-2">Fournisseur</th>
+          {% endif %}
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          {% if not order.delivered %}
+            <tr class="border-t border-gray-700">
+              <td class="px-4 py-2">{{ order.item.name }}</td>
+              <td class="px-4 py-2">{{ order.item.description }}</td>
+              <td class="px-4 py-2">{{ order.quantity }}</td>
+              <td class="px-4 py-2">{{ order.unit_price }}</td>
+              <td class="px-4 py-2">{{ order.total_price }}</td>
+              <td class="px-4 py-2">{{ order.paid }}</td>
+              {% if current_user.is_supplier %}
+                <td class="px-4 py-2">{{ order.owner.name }}</td>
+              {% else %}
+                <td class="px-4 py-2">{{ order.supplier.name }}</td>
+              {% endif %}
+
+              <td class="px-4 py-2">
+                {% if (current_user.id == order.owner_id or current_user.is_admin) and not order.paid %}
+                  <a href="{{ url_for('main.delete_order', id=order.id) }}" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-2 rounded">Suspendre</a>
+                  <a href="{{ url_for('main.pay_order', id=order.id) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">Simuler un payement</a>
+                {% elif current_user.id == order.supplier_id and order.paid and not order.delivered %}
+                  <a href="{{ url_for('main.supply_order', id=order.id) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">Fournir</a>
+                {% endif %}
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <p class="font-bold mb-5">Fournies</p>
+    <table class="table-auto w-full text-left bg-gray-900 text-gray-300 rounded-lg overflow-hidden">
+      <thead class="bg-gray-800 text-gray-400">
+        <tr>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Qté</th>
+          <th class="px-4 py-2">PU</th>
+          <th class="px-4 py-2">PT</th>
+          <th class="px-4 py-2">Payée</th>
+          <th class="px-4 py-2">Fournisseur</th>
+          <th class="px-4 py-2">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+          {% if order.delivered %}
+            <tr class="border-t border-gray-700">
+              <td class="px-4 py-2">{{ order.item.name }}</td>
+              <td class="px-4 py-2">{{ order.item.description }}</td>
+              <td class="px-4 py-2">{{ order.quantity }}</td>
+              <td class="px-4 py-2">{{ order.unit_price }}</td>
+              <td class="px-4 py-2">{{ order.total_price }}</td>
+              <td class="px-4 py-2">{{ order.paid }}</td>
+              <td class="px-4 py-2">{{ order.supplier.name }}</td>
+
+              <td class="px-4 py-2">
+                <a href="{{ url_for('main.supply_order', id=order.id) }}" class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded">Voir payment</a>
+              </td>
+            </tr>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

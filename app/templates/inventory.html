@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+{% from 'macros.html' import input_field, select_field, text_area, action_button, button_link %}
+{% block title %}
+  Inventaire
+{% endblock %}
+{% block content %}
+  <div>
+    <p class="font-bold mt-5">Ajouter un itème à l'inventaire</p>
+    <form method="post" action="{{ url_for('main.inventory') }}">
+      <select name="item_type" id="item_type" class="px-5 py-2 my-5 border rounded-md border-gray-400">
+        {% for item in items %}
+          <option value="{{ item.id }}">{{ item.name }}</option>
+        {% endfor %}
+      </select>
+      {{ input_field('quantity', 'Quantité', 'number') }}
+      {{ input_field('unit_price', 'Prix', 'number') }}
+      {{ action_button('Ajouter') }}
+    </form>
+    {% if current_user.is_admin %}
+      <p class="my-3 text-sm">
+        <a class="underline text-slate-500" href="{{ url_for('admin.items') }}">Ajouter une nouvelle reference</a>
+      </p>
+    {% endif %}
+  </div>
+  <div class="my-5">
+    <p class="font-bold mb-5">Inventaire</p>
+    <table class="table-auto w-full text-left bg-gray-900 text-gray-300 rounded-lg overflow-hidden">
+      <thead class="bg-gray-800 text-gray-400">
+        <tr>
+          <th class="px-4 py-2">Name</th>
+          <th class="px-4 py-2">Description</th>
+          <th class="px-4 py-2">Quantity</th>
+          <th class="px-4 py-2">Unit Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for inventory in inventories %}
+          <tr class="border-t border-gray-700">
+            <td class="px-4 py-2">{{ inventory.item.name }}</td>
+            <td class="px-4 py-2">{{ inventory.item.description }}</td>
+            <td class="px-4 py-2">{{ inventory.quantity }}</td>
+            <td class="px-4 py-2">{{ inventory.unit_price }} USD</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}
