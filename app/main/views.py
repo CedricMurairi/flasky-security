@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from app.models import User, Inventory, Item, Order, Payment
 from app import db
 from app.email import send_email
-from datetime import datetime as Datetime
+from datetime import datetime
 
 
 @main.route('/', methods=['GET'])
@@ -52,7 +52,7 @@ def pay_order(id):
     method = "Bank Transfer"
 
     payment = Payment(order_id=order.id, amount=order.total_price,
-                      debitor_id=order.owner_id, receiver_id=order.supplier_id, method=method, payment_date=Datetime.now())
+                      debitor_id=order.owner_id, receiver_id=order.supplier_id, method=method, payment_date=datetime.now())
     db.session.add(payment)
 
     db.session.commit()
@@ -61,7 +61,6 @@ def pay_order(id):
                'order/payment_received', order=order, payment_date=payment.payment_date)
 
     flash("Order has been paid")
-
     return redirect(url_for('main.orders'))
 
 
@@ -72,40 +71,38 @@ def supply_order(id):
     owner_id = order.owner_id
     supplier_id = order.supplier_id
 
-    owner_inventory = Inventory.query.filter_by(
-        owner_id=owner_id, item_id=order.item_id).first()
+    # Fetch the supplier's inventory and check if they have enough quantity
     supplier_inventory = Inventory.query.filter_by(
-        owner_id=supplier_id, item_id=order.item.id).first()
-
-    if supplier_inventory.quantity < order.quantity:
+        owner_id=supplier_id, item_id=order.item_id).first()
+    if supplier_inventory is None or supplier_inventory.quantity < order.quantity:
         flash("Supplier does not have enough items to supply this order")
         return redirect(url_for('main.orders'))
 
+    # Fetch the owner's inventory or create one if it doesn't exist
+    owner_inventory = Inventory.query.filter_by(
+        owner_id=owner_id, item_id=order.item_id).first()
+    if owner_inventory is None:
+        owner_inventory = Inventory(
+            item_id=order.item_id, quantity=0, unit_price=order.unit_price, owner_id=owner_id)
+        db.session.add(owner_inventory)
+
+    # Update the inventories
     owner_inventory.quantity += order.quantity
     supplier_inventory.quantity -= order.quantity
+
+    # Mark the order as delivered
     order.delivered = True
-    order.delivery_date = Datetime.now()
+    order.delivery_date = datetime.now()
 
-    db.session.add(owner_inventory)
-    db.session.add(supplier_inventory)
-    db.session.add(order)
-    db.session.commit()
-
-    send_email(order.owner.email, 'Your order has been supplied',
-               'order/order_supplied', order=order)
-
-    flash("Order has been supplied")
-
-    return redirect(url_for('main.orders'))
-
-
-@main.route('/order/<int:id>/delete', methods=['GET'])
-@login_required
-def delete_order(order_id):
-    order = Order.query.get(order_id)
-    db.session.delete(order)
-    db.session.commit()
-    flash('Order has been deleted successfully')
+    # Save changes within a single transaction
+    try:
+        db.session.commit()
+        send_email(order.owner.email, 'Your order has been supplied',
+                   'order/order_supplied', order=order)
+        flash("Order has been successfully supplied")
+    except Exception as e:
+        db.session.rollback()
+        flash(f"An error occurred while supplying the order: {str(e)}")
 
     return redirect(url_for('main.orders'))
 
@@ -147,3 +144,14 @@ def inventory():
     inventories = Inventory.query.filter_by(owner_id=current_user.id).all()
     items = Item.query.all()
     return render_template('inventory.html', inventories=inventories, items=items)
+
+
+@main.route('/order/<int:id>/delete', methods=['GET'])
+@login_required
+def delete_order(id):
+    order = Order.query.get(id)
+    db.session.delete(order)
+    db.session.commit()
+    flash('Order has been deleted successfully')
+
+    return redirect(url_for('main.orders'))

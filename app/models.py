@@ -95,11 +95,11 @@ class Order(UserMixin, db.Model):
     supplier_id = Column(Integer, ForeignKey('users.id'))
     owner_id = Column(Integer, ForeignKey('users.id'))
     supplier = relationship("User", foreign_keys=[
-        supplier_id], backref="orders", cascade="all, delete")
+        supplier_id], backref="orders")
     owner = relationship("User", foreign_keys=[
-                         owner_id], backref="own_orders", cascade="all, delete")
+                         owner_id], backref="own_orders")
     item = relationship("Item", foreign_keys=[
-                        item_id], backref="in_orders", cascade="all, delete")
+                        item_id], backref="in_orders")
 
     def __init__(self, item_id=None, quantity=0, unit_price=0, total_price=0, supplier_id=None, owner_id=None):
         self.item_id = item_id
@@ -157,8 +157,8 @@ class Inventory(UserMixin, db.Model):
     unit_price = Column(Float, nullable=False)
     owner_id = Column(Integer, ForeignKey('users.id'))
     owner = relationship("User", foreign_keys=[
-                         owner_id], backref="inventory", cascade="all, delete")
-    item = relationship("Item", foreign_keys=[item_id], cascade="all, delete")
+                         owner_id], backref="inventory")
+    item = relationship("Item", foreign_keys=[item_id])
 
     def __init__(self, item_id=None, quantity=0, unit_price=None, owner_id=None):
         self.item_id = item_id
